@@ -46,13 +46,16 @@ $(BUILD_DIR)/$(PROJECT): src/main.cpp #any other object files like objs/testing.
 $(OBJS_DIR)/gtest.o: 
 	$(DIR_GUARD)
 	@echo -n compiling Google Test Library $@
-	@$(CC) $(CFLAGS) -isystem -pthread -I$(GTEST_DIR)/include -I$(GTEST_DIR)  -c $(GTEST_DIR)/src/gtest-all.cc -o $@
+	@$(CC) $(CFLAGS) -isystem $(GTEST_DIR)/include -I$(GTEST_DIR)  -isystem $(GMOCK_DIR) \
+	-pthread -c $(GTEST_DIR)/src/gtest-all.cc -o $@  
 	@echo " ...finished\n"
 
 $(OBJS_DIR)/gmock.o: 
 	$(DIR_GUARD)
 	@echo -n compiling Google Mocking Library $@
-	@$(CC) $(CFLAGS) -isystem -pthread -I$(TEST_INC) -c $(GMOCK_DIR)/src/gmock-all.cc -o $@
+	@$(CC) $(CFLAGS) -isystem ${GTEST_DIR}/include -I${GTEST_DIR} \
+    -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} \
+    -pthread -c ${GMOCK_DIR}/src/gmock-all.cc -o $@ 
 	@echo " ...finished\n"
 
 $(OBJS_DIR)/testing.o: src/testing.cpp include/testing.hpp 
@@ -60,13 +63,23 @@ $(OBJS_DIR)/testing.o: src/testing.cpp include/testing.hpp
 	@echo -n compiling $@ 
 	@$(CC) $(CFLAGS) -c src/testing.cpp -o $@ $(INC)
 	@echo " ...finished\n"
+	
+#LIBS
+
+
+$(OBJS_DIR)/libgmock.a: ${OBJS_DIR}/gtest.o ${OBJS_DIR}/gmock.o
+	@echo -n creating static Library $@
+	@ar -rc $@ $^
+	@echo " ...finished\n"
+	
+libs:$(OBJS_DIR)/libgmock.a
 
 # TESTS	
 
 $(TESTS_DIR)/gen: objs/gmock.o objs/gtest.o objs/testing.o tests/gen.cpp
 	$(DIR_GUARD)
 	@echo -n compiling test $@ 
-	@$(CC) $(CFPRODUCTION)  $^ -o $@ $(TEST_INC) $(INC) -Ipxml -Isrc
+	@$(CC) $(CFLAGS) $(INC) $(TEST_INC) $^ ${OBJS_DIR}/libgmock.a -o $@  
 	@echo " ...finished\n"
 
 tests: $(TESTS_DIR)/gen
