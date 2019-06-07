@@ -76,10 +76,10 @@ libs:$(OBJS_DIR)/libgmock.a
 
 # TESTS	
 
-$(TESTS_DIR)/gen: objs/gmock.o objs/gtest.o objs/testing.o tests/gen.cpp
+$(TESTS_DIR)/gen: objs/gmock.o objs/gtest.o objs/testing.o tests/gen.cpp objs/libgmock.a
 	$(DIR_GUARD)
 	@echo -n compiling test $@ 
-	@$(CC) $(CFLAGS) $(INC) $(TEST_INC) $^ ${OBJS_DIR}/libgmock.a -o $@  
+	@$(CC) $(CFLAGS) -pthread  $(INC) $(TEST_INC) $^ ${OBJS_DIR}/libgmock.a -o $@  
 	@echo " ...finished\n"
 
 tests: $(TESTS_DIR)/gen
